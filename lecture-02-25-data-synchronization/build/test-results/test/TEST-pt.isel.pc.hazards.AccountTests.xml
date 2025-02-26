@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pt.isel.pc.hazards.AccountTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-02-25T17:25:41" hostname="DESKTOP-HJHKTHG" time="4.162">
+  <properties/>
+  <testcase name="multiple thread account access using account locks ordered by hashcode()" classname="pt.isel.pc.hazards.AccountTests" time="4.162"/>
+  <system-out><![CDATA[transferTo3 test elapsed time: 4135 m
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

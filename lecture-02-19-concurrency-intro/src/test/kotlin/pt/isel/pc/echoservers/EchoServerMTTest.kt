@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 class EchoServerTest {
     companion object {
-        val nclients = 800
+        val nclients = 500
         private val logger = KotlinLogging.logger {}
     }
 
@@ -31,11 +31,13 @@ class EchoServerTest {
 
         // A thread safe collection from java libraries
         val ids = ConcurrentHashMap.newKeySet<Int>()
+        var numMessages = ConcurrentHashMap.newKeySet<Int>()
         val threads = mutableListOf<Thread>()
         repeat(nclients) {
              val thread =  Thread  {
                 val client = EchoClient("127.0.0.1", 8000)
-                val res = client.contact()
+                val resPair = client.contactAndSendMessage()
+                 val res = resPair.first
                 if (!ids.add(res)) {
                     logger.warn("$res: duplicated id!")
                 }

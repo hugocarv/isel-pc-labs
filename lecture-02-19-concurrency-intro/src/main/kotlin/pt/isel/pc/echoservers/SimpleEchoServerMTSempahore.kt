@@ -9,10 +9,11 @@ import java.io.OutputStreamWriter
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
+import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicInteger
 
 
-class SimpleEchoServerMT(private val port: Int) {
+class SimpleEchoServerMTSempahore(private val port: Int) {
 
     companion object {
         val EXIT = "exit"
@@ -29,9 +30,10 @@ class SimpleEchoServerMT(private val port: Int) {
     private var globalEchoCounter = AtomicInteger()
 
 
-    private fun processConnection(clientSock: Socket, clientId: Int ) {
+    private fun processConnection(clientSock: Socket) {
         logger.info("client ${clientSock.remoteSocketAddress} connected")
         var clientEchoCounter = 0 // estado privado. Apenas para um cliente em causa.
+        val clientId = clientSock.remoteSocketAddress
 
         try {
             clientSock.use {
@@ -68,28 +70,33 @@ class SimpleEchoServerMT(private val port: Int) {
                 .writeLine("Sorry, but this server is full at the moment! Please try again later.")
         }
 
+
+
     fun run() {
         try {
 
             serverSocket.use {
                 serverSocket.bind(InetSocketAddress("0.0.0.0", port), BACKLOG)
                 logger.info("waiting for client connections")
-                val clientCount = AtomicInteger(0)
+                val clientSemaphore = Semaphore(MAX_CLIENTS)
+
+
 
                 while (true) {
-                    val clientSock = serverSocket.accept()
+                    val clientSock: Socket = serverSocket.accept()
 
-                    if(clientCount.get() < MAX_CLIENTS) {
-                        clientCount.getAndIncrement()
-                        logger.debug("New client arrived. clientCount: " + clientCount.get())
+                    if(clientSemaphore.tryAcquire()) {
+                    //if(clientCount.get() < MAX_CLIENTS) {
+                        logger.debug("New client arrived.")
 
                         Thread {
-                            processConnection(clientSock, clientCount.get())
-                            clientCount.decrementAndGet()
-                            logger.info("Client exited. Now clients are: ${clientCount.get()}")
+                            processConnection(clientSock)
+                            clientSemaphore.release()
+                            logger.info("Client exited.")
                         }.start()
 
                     }
+
                     else {
                         logger.warn("Wait! Queue is full! MAX_CLIENTS=${MAX_CLIENTS}")
                         /** OPTION 1 **/
@@ -125,5 +132,5 @@ class SimpleEchoServerMT(private val port: Int) {
 }
 
 fun main() {
-    SimpleEchoServerMT(8000).run()
+    SimpleEchoServerMTSempahore(8000).run()
 }

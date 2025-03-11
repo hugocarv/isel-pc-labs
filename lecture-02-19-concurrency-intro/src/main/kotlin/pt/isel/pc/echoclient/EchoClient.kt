@@ -34,18 +34,53 @@ class EchoClient(private val serverAddress: String, private val serverPort : Int
         }
         return id
     }
+
+    fun contactAndSendMessage() : Pair<Int, String> {
+        var id : Int = 0
+        var lines : String = ""
+        try {
+            val socket = Socket()
+            socket.use {
+                socket.connect(InetSocketAddress(serverAddress, serverPort))
+                val reader = socket.getInputStream().bufferedReader()
+                val writer = socket.getOutputStream().bufferedWriter()
+
+                id = reader.readLine().split(" ").last().toInt()
+                //println("id is $id")
+                reader.use {
+                    writer.writeLine("line1")
+                    writer.writeLine("line2")
+
+                    writer.writeLine("exit")
+                    reader.use {
+                        lines = reader.lines().toList().last().split("TotalLines=").last()
+                    }
+                    println("lines = $lines")
+                }
+
+            }
+        }
+        catch(e: IOException) {
+            println("error on connect:${e.message}, ${e.cause?.message}")
+        }
+        return Pair(id,lines)
+    }
 }
 
 fun main() {
-    val nclients = 300
+    val nclients = 500
 
     val time = measureTime {
         val ids = ConcurrentHashMap.newKeySet<Int>()
+        val lines = ConcurrentHashMap.newKeySet<Int>()
+
         val threads = mutableListOf<Thread>()
         repeat(nclients) {
             val thread = Thread {
-                val client = EchoClient("127.0.0.1", 8080)
-                val res = client.contact()
+                val client = EchoClient("127.0.0.1", 8000)
+                val resPair = client.contactAndSendMessage()
+                val res = resPair.first // id
+                lines.add(resPair.second.toInt())
                 if (!ids.add(res)) {
                     println("$res: duplicated id!")
                 }
@@ -60,6 +95,7 @@ fun main() {
             println("nclients=$nclients, ids.size=${ids.size}")
         } else {
             println("all ok!")
+            println("nclients=$nclients, ids.size=${ids.size}, linesTotal=${lines.first()}")
         }
     }
     println("done in $time ms!")

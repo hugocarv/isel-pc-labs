@@ -1,4 +1,4 @@
-# Aula 1:
+# Aula 1 - 18.02.2025:
 
 Stream - só tem um fio de execução e pode ter vários clientes ao mesmo tempo
  (ex: node) - callbacks -> op. assíncronas

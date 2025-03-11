@@ -1,4 +1,4 @@
-# Aula 26.03.2025 - *uthreads*
+# Aula 3 - 26.02.2025 - *uthreads*
 
 Estados Threads:
  - RUNNING
